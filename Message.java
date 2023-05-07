@@ -1,7 +1,6 @@
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Message implements Serializable{
+public class Message{
     public int sender;
     public int nextDestination;
     public int finalDestination;

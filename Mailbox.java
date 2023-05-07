@@ -1,15 +1,9 @@
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
 import java.util.*;
 
 public class Mailbox{
     
-    class Item{
-        public int size;
-        public byte[] content;
-    }
-    
-    private static Map<Integer, ArrayDeque<Item>> mailboxes;
+    private Map<Integer, ArrayDeque<Message>> mailboxes;
+    //TODO explicity locking
     
     private Mailbox(){
         this.mailboxes = new HashMap<>();
@@ -22,12 +16,12 @@ public class Mailbox{
         return _mailbox.empty(mailboxID);
     }
 
-    public static int mbox_send(int mailboxID, Object object, int size){
-        return _mailbox.send(mailboxID, object, size);
+    public static void mbox_send(int mailboxID, Message message){
+        _mailbox.send(mailboxID, message);
     }
 
-    public static int mbox_receive(int mailboxID, byte[] buffer, int size){
-        return _mailbox.receive(mailboxID, buffer, size);
+    public static Message mbox_receive(int mailboxID){
+        return _mailbox.receive(mailboxID);
     }
 
     private boolean empty(int mailboxID){
@@ -38,40 +32,19 @@ public class Mailbox{
         return mailboxes.get(mailboxID).isEmpty();
     }
 
-    private int send(int mailboxID, Object object, int size){
+    private void send(int mailboxID, Message message){
         if(!mailboxes.containsKey(mailboxID)){
             mailboxes.put(mailboxID, new ArrayDeque<>());
         }
         
-        Item item = new Item();
-
-        try{
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(object);
-            item.size = size;
-            item.content = bos.toByteArray();
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-        
-        mailboxes.get(mailboxID).add(item);
-        return size;
+        mailboxes.get(mailboxID).add(message);
     }
 
-    private int receive(int mailboxID, byte[] buffer, int max){
+    private Message receive(int mailboxID){
         if(!mailboxes.containsKey(mailboxID)){
-            return 0;
+            return null;
         }
 
-        Item item = mailboxes.get(mailboxID).pop();
-
-        if(item.size > max){
-            return -1;
-        }
-
-        buffer = item.content;
-
-        return item.size;
+        return mailboxes.get(mailboxID).pop();
     }
 }
